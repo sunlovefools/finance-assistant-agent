@@ -1,0 +1,115 @@
+erDiagram
+
+    USERS {
+        bigint user_id PK
+        text full_name
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    ACCOUNTS {
+        bigint account_id PK
+        bigint user_id FK
+        text account_name
+        text account_type
+        numeric balance
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    MERCHANT_TYPES {
+        bigint merchant_type_id PK
+        text merchant_type_name UK_CI
+        text description
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    MERCHANTS {
+        bigint merchant_id PK
+        bigint merchant_type_id FK
+        text merchant_name
+        text location_name
+        text city
+        text state
+        text country
+        text other_name
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    CATEGORIES {
+        bigint category_id PK
+        bigint parent_category_id FK
+        text category_name UK_CI_BY_PARENT
+        int category_level
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    PRODUCTS_SERVICES {
+        bigint product_service_id PK
+        text default_name UK_CI
+        bigint default_category_id FK
+        text unit_of_measure
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    EXPENSE_TRANSACTIONS {
+        bigint transaction_id PK
+        bigint user_id FK
+        bigint account_id FK
+        bigint merchant_id FK
+        timestamptz transaction_datetime
+        date transaction_date
+        numeric total_amount
+        text notes
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    ACCOUNT_TRANSFERS {
+        bigint transfer_id PK
+        bigint user_id FK
+        bigint from_account_id FK
+        bigint to_account_id FK
+        timestamptz transfer_datetime
+        date transfer_date
+        numeric amount
+        text notes
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    EXPENSE_LINE_ITEMS {
+        bigint line_item_id PK
+        bigint transaction_id FK
+        bigint product_service_id FK
+        bigint category_id FK
+        text item_name
+        numeric quantity
+        numeric unit_price
+        numeric total_price
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    USERS ||--o{ ACCOUNTS : owns
+    USERS ||--o{ EXPENSE_TRANSACTIONS : records
+    USERS ||--o{ ACCOUNT_TRANSFERS : records
+
+    ACCOUNTS ||--o{ EXPENSE_TRANSACTIONS : used_for
+    ACCOUNTS ||--o{ ACCOUNT_TRANSFERS : source
+    ACCOUNTS ||--o{ ACCOUNT_TRANSFERS : destination
+
+    MERCHANT_TYPES ||--o{ MERCHANTS : classifies
+    MERCHANTS ||--o{ EXPENSE_TRANSACTIONS : spent_at
+
+    EXPENSE_TRANSACTIONS ||--o{ EXPENSE_LINE_ITEMS : contains
+
+    CATEGORIES ||--o{ CATEGORIES : parent_of
+    CATEGORIES ||--o{ PRODUCTS_SERVICES : default_for
+    CATEGORIES ||--o{ EXPENSE_LINE_ITEMS : classifies
+
+    PRODUCTS_SERVICES ||--o{ EXPENSE_LINE_ITEMS : referenced_by
