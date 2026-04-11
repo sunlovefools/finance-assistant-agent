@@ -9,9 +9,20 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init/postgres:/docker-entrypoint-initdb.d
+    volumes: # Volume is where Docker stores data outside of the contianer's writable layer
+      - postgres_data:/var/lib/postgresql
+      - ./init/postgres:/docker-entrypoint-initdb.d # Script to initialise the database
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: financial-assistant-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
 volumes:
   postgres_data:
