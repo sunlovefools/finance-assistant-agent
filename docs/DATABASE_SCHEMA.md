@@ -1,6 +1,7 @@
 # Expense Tracking Database Schema
 
 Updated on 2026-04-11
+Version: 1.0.0
 
 This document describes the PostgreSQL schema used by this project, including expenses, line items, and account-to-account transfers.
 
