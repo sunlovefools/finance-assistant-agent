@@ -31,3 +31,5 @@ If you want to recreate the schema from scratch:
 docker compose down -v
 docker compose up -d
 ```
+
+If you already have a populated volume, new init SQL changes (for example `pg_trgm` extension/index additions) will not auto-apply. Either recreate the volume as above, or run the equivalent `CREATE EXTENSION/CREATE INDEX` statements manually on the running database.

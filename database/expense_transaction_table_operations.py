@@ -7,7 +7,7 @@ from sqlalchemy import BigInteger, Column, Date, DateTime, MetaData, Numeric, Ta
 
 from database.utils import get_engine
 
-
+# Expense Transactions Table Operations
 _METADATA = MetaData()
 _EXPENSE_TRANSACTIONS = Table(
     "expense_transactions",

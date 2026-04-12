@@ -15,6 +15,9 @@
 -- CREATE SCHEMA expense_app;
 -- SET search_path TO expense_app, public;
 
+-- Needed for merchant fuzzy matching with trigram similarity/operators.
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 
 -- =========================================================
 -- 1) Helper function: automatically refresh updated_at
@@ -388,6 +391,9 @@ CREATE INDEX idx_accounts_user_id
 
 CREATE INDEX idx_merchants_merchant_type_id
     ON merchants(merchant_type_id);
+
+CREATE INDEX IF NOT EXISTS idx_merchants_name_trgm_ci
+    ON merchants USING gin (LOWER(BTRIM(merchant_name)) gin_trgm_ops);
 
 CREATE INDEX idx_categories_parent_category_id
     ON categories(parent_category_id);
