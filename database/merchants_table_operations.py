@@ -46,9 +46,9 @@ def _build_location_text(row: dict) -> str:
     return " ".join(part.strip() for part in parts if part and part.strip())
 
 
-def resolve_merchant(
+def search_merchant(
     merchant_name_query: str,
-    location_query: str,
+    location_query: str | None,
     limit: int = 5,
 ) -> MerchantResolutionResult:
     """
@@ -60,13 +60,15 @@ def resolve_merchant(
     # Basic input validation to avoid broad/ambiguous matching.
     if not isinstance(merchant_name_query, str) or not _normalize_text(merchant_name_query):
         raise ValueError("merchant_name_query must be a non-empty string.")
-    if not isinstance(location_query, str) or not _normalize_text(location_query):
-        raise ValueError("location_query must be a non-empty string.")
     if limit < 1:
         raise ValueError("limit must be >= 1.")
 
     merchant_name_norm = _normalize_text(merchant_name_query)
-    location_query_norm = _normalize_text(location_query)
+    if isinstance(location_query, str):
+        normalized_location = _normalize_text(location_query)
+        location_query_norm = normalized_location if normalized_location else None
+    else:
+        location_query_norm = None
     user_id = get_default_user_id()
     # Fetch a wider initial pool so reranking has enough candidates.
     prefetch_limit = max(limit * 20, 50)
@@ -123,8 +125,12 @@ def resolve_merchant(
             fuzz.WRatio(merchant_name_norm, _normalize_text(str(row["merchant_name"]))) / 100.0
         )
         # Stage 2b: location relevance in [0.0, 1.0].
+        # If no location_query is provided, treat location as perfect (100%).
         location_text = _normalize_text(_build_location_text(row))
-        location_score = float(fuzz.WRatio(location_query_norm, location_text) / 100.0) if location_text else 0.0
+        if location_query_norm is None:
+            location_score = 1.0
+        else:
+            location_score = float(fuzz.WRatio(location_query_norm, location_text) / 100.0) if location_text else 0.0
         # Weighted final score as specified: 70% name, 30% location.
         final_score = (0.7 * merchant_name_score) + (0.3 * location_score)
 
