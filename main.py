@@ -1,5 +1,16 @@
-def main():
-    print("Hello from financial-assitant-agent!")
+from __future__ import annotations
+
+"""Local executable entrypoint for running FastAPI workflow service."""
+
+import uvicorn
+
+from app.api import app
+
+
+def main() -> None:
+    """Start API server in non-reload mode for stable local runtime."""
+
+    uvicorn.run("app.api:app", host="0.0.0.0", port=8000, reload=False)
 
 
 if __name__ == "__main__":

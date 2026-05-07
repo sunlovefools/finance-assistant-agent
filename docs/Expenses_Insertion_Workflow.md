@@ -137,7 +137,7 @@ This allows the assistant to first identify likely merchant brands, and then ref
 ```python
 explore_merchants_without_location(
     merchant_name_query: str,
-    limit: int = 20
+    limit: int = 50
 )
 ```
 
@@ -163,7 +163,7 @@ Example use cases:
 explore_merchants_with_location(
     merchant_name_query: str,
     location_query: str,
-    limit: int = 10
+    limit: int = 50
 )
 ```
 
@@ -363,8 +363,8 @@ Constraints:
 ### Core Tools
 
 ```python
-search_merchants(merchant_name_query, location_query, limit=10)
-explore_merchants(query, location_query, limit=20)
+explore_merchants_without_location(merchant_name_query, limit=50)
+explore_merchants_with_location(merchant_name_query, location_query, limit=50)
 ```
 
 ### Backend-Injected Context

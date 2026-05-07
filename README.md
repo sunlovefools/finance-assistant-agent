@@ -2,6 +2,30 @@
 
 This repository currently focuses on database design for personal expense tracking with transfer support.
 
+## Expense Workflow API (LangGraph)
+
+This project now includes a unified FastAPI workflow endpoint:
+
+- `POST /api/v1/expenses/workflow`
+
+It runs a LangGraph conversation flow for expense insertion:
+
+- extraction -> account resolution -> merchant exploration/resolution
+- clarification / confirmation loops
+- optional merchant creation (after user approval)
+- atomic expense insert + account balance update
+
+Visibility:
+
+- Structured JSONL workflow logs are written to:
+  - `logs/expense_workflow_events.jsonl` (or `WORKFLOW_LOG_PATH`)
+
+Run locally:
+
+```bash
+python main.py
+```
+
 ## Core Capabilities
 
 - Record expense transactions and detailed line items.

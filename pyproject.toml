@@ -5,8 +5,14 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "fastapi",
+    "langchain",
+    "langchain-openai",
+    "langgraph",
+    "langgraph-checkpoint-postgres",
     "pydantic",
     "psycopg",
     "rapidfuzz",
     "sqlalchemy",
+    "uvicorn",
 ]
