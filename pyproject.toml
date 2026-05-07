@@ -15,4 +15,6 @@ dependencies = [
     "rapidfuzz",
     "sqlalchemy",
     "uvicorn",
+    "python-dotenv",
+    "requests",
 ]
