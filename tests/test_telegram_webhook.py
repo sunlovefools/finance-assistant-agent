@@ -6,6 +6,8 @@ from fastapi.testclient import TestClient
 
 from app.api import app
 from app.config import get_settings
+from app.schemas import TelegramUpdate
+from app.services.telegram import TelegramWebhookService
 
 
 def _clear_settings_cache() -> None:
@@ -26,6 +28,7 @@ def test_telegram_webhook_logs_text(monkeypatch, caplog):
     """
 
     # Disable webhook secret validation for this test
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "")
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", "")
 
     # Clear cached setting so that the new env is applied
@@ -53,6 +56,7 @@ def test_telegram_webhook_logs_text(monkeypatch, caplog):
         "received": True,
         "update_id": 123,
         "message_text": "hello from telegram",
+        "reply_text": None,
     }
     assert "text=hello from telegram" in caplog.text
 
@@ -66,6 +70,7 @@ def test_telegram_webhook_accepts_non_text_update(monkeypatch):
     """
 
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", "")
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "")
     _clear_settings_cache()
     client = TestClient(app)
 
@@ -82,7 +87,85 @@ def test_telegram_webhook_accepts_non_text_update(monkeypatch):
     response = client.post("/api/v1/telegram/webhook", json=payload)
 
     assert response.status_code == 200
-    assert response.json() == {"ok": True, "received": True, "update_id": 124, "message_text": None}
+    assert response.json() == {
+        "ok": True,
+        "received": True,
+        "update_id": 124,
+        "message_text": None,
+        "reply_text": None,
+    }
+
+
+def test_telegram_webhook_returns_add_expenses_prompt(monkeypatch):
+    """Test that the add expenses command returns the first prompt."""
+
+    monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", "")
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "")
+    _clear_settings_cache()
+    client = TestClient(app)
+
+    payload = {
+        "update_id": 126,
+        "message": {
+            "message_id": 57,
+            "date": 1_714_000_002,
+            "chat": {"id": 999, "type": "private"},
+            "from": {"id": 888, "is_bot": False},
+            "text": "/add_expenses",
+        },
+    }
+
+    response = client.post("/api/v1/telegram/webhook", json=payload)
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "ok": True,
+        "received": True,
+        "update_id": 126,
+        "message_text": "/add_expenses",
+        "reply_text": "What Expenses You Want To Add?",
+    }
+
+
+def test_telegram_service_sends_add_expenses_prompt(monkeypatch):
+    """Test that the add expenses command sends a Telegram reply."""
+
+    calls = []
+
+    class FakeResponse:
+        status_code = 200
+
+        def json(self):
+            return {"ok": True, "result": {"message_id": 99}}
+
+    def fake_post(url, json, timeout):
+        calls.append({"url": url, "json": json, "timeout": timeout})
+        return FakeResponse()
+
+    monkeypatch.setattr("app.services.telegram.requests.post", fake_post)
+    service = TelegramWebhookService(bot_token="test-token")
+
+    payload = {
+        "update_id": 127,
+        "message": {
+            "message_id": 58,
+            "date": 1_714_000_003,
+            "chat": {"id": 999, "type": "private"},
+            "from": {"id": 888, "is_bot": False},
+            "text": "/add_expenses@TestFinanceBot",
+        },
+    }
+
+    response = service.handle_update(TelegramUpdate.model_validate(payload))
+
+    assert response.reply_text == "What Expenses You Want To Add?"
+    assert calls == [
+        {
+            "url": "https://api.telegram.org/bottest-token/sendMessage",
+            "json": {"chat_id": 999, "text": "What Expenses You Want To Add?"},
+            "timeout": 15,
+        }
+    ]
 
 
 def test_telegram_webhook_rejects_invalid_secret(monkeypatch):

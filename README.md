@@ -28,11 +28,25 @@ After starting ngrok, set `TELEGRAM_WEBHOOK_BASE_URL` in `.env` to your public n
 python scripts/setup_telegram_webhook.py
 ```
 
+Register the bot command menu:
+
+```bash
+python scripts/setup_telegram_commands.py
+```
+
 Required config:
 
 - `TELEGRAM_BOT_TOKEN`: your bot token, already used when registering the webhook.
 - `TELEGRAM_WEBHOOK_BASE_URL`: your public ngrok HTTPS URL, for example `https://your-domain.ngrok-free.app`.
 - `TELEGRAM_WEBHOOK_SECRET`: a random secret you provide to Telegram through `secret_token`; Telegram will send it back in `X-Telegram-Bot-Api-Secret-Token`.
+
+Supported bot commands:
+
+- `/add_expenses`: returns `What Expenses You Want To Add?`.
+
+Debug logs are written to `logs/debug.log`. The add-expenses command path uses
+`telegram.add_expenses.*` log messages so command detection and reply sending are
+easy to filter.
 
 Run tests:
 

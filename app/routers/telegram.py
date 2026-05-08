@@ -16,7 +16,8 @@ router = APIRouter(prefix="/api/v1/telegram", tags=["telegram"])
 def get_telegram_service() -> TelegramWebhookService:
     """Dependency provider for Telegram webhook handling."""
 
-    return TelegramWebhookService()
+    settings = get_settings()
+    return TelegramWebhookService(bot_token=settings.telegram_bot_token)
 
 
 def verify_telegram_secret(

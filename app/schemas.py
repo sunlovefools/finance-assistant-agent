@@ -83,3 +83,4 @@ class TelegramWebhookResponse(BaseModel):
     received: bool
     update_id: int
     message_text: str | None = None
+    reply_text: str | None = None

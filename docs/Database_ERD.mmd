@@ -1,115 +1,172 @@
 erDiagram
 
+    USERS ||--o{ ACCOUNTS : owns
+    USERS ||--o{ CATEGORIES : creates_custom
+    USERS ||--o{ MERCHANTS : creates
+    USERS ||--o{ EXPENSE_DRAFTS : creates
+    USERS ||--o{ EXPENSE_TRANSACTIONS : owns
+    USERS ||--o{ ACCOUNT_TRANSFERS : owns
+    USERS ||--o{ EXTERNAL_TRANSFERS : owns
+
+    CATEGORIES ||--o{ CATEGORIES : parent_of
+
+    MERCHANT_TYPES ||--o{ MERCHANTS : primary_type_of
+
+    ACCOUNTS ||--o{ EXPENSE_DRAFTS : selected_in
+    ACCOUNTS ||--o{ EXPENSE_DRAFTS : draft_source_account
+    ACCOUNTS ||--o{ EXPENSE_DRAFTS : draft_destination_account
+    ACCOUNTS ||--o{ EXPENSE_TRANSACTIONS : pays_from
+    ACCOUNTS ||--o{ ACCOUNT_TRANSFERS : source_account
+    ACCOUNTS ||--o{ ACCOUNT_TRANSFERS : destination_account
+    ACCOUNTS ||--o{ EXTERNAL_TRANSFERS : transfers_from
+
+    CATEGORIES ||--o{ EXPENSE_DRAFTS : selected_category
+    CATEGORIES ||--o{ EXPENSE_DRAFTS : selected_subcategory
+    CATEGORIES ||--o{ EXPENSE_DRAFTS : selected_final_category
+    CATEGORIES ||--o{ EXPENSE_TRANSACTIONS : categorises
+    CATEGORIES ||--o{ EXTERNAL_TRANSFERS : categorises
+
+    MERCHANTS ||--o{ EXPENSE_DRAFTS : selected_in
+    MERCHANTS ||--o{ EXPENSE_TRANSACTIONS : spent_at
+
+    EXPENSE_DRAFTS ||--o| EXPENSE_TRANSACTIONS : creates_expense
+    EXPENSE_DRAFTS ||--o| ACCOUNT_TRANSFERS : creates_internal_transfer
+    EXPENSE_DRAFTS ||--o| EXTERNAL_TRANSFERS : creates_external_transfer
+
+
     USERS {
-        bigint user_id PK
-        text full_name
-        timestamptz created_at
-        timestamptz updated_at
+        UUID user_id PK
+        BIGINT telegram_user_id UK
+        TEXT full_name
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
     }
 
     ACCOUNTS {
-        bigint account_id PK
-        bigint user_id FK
-        text account_name
-        text account_type
-        numeric balance
-        timestamptz created_at
-        timestamptz updated_at
-    }
-
-    MERCHANT_TYPES {
-        bigint merchant_type_id PK
-        text merchant_type_name UK_CI
-        text description
-        timestamptz created_at
-        timestamptz updated_at
-    }
-
-    MERCHANTS {
-        bigint merchant_id PK
-        bigint merchant_type_id FK
-        text merchant_name
-        text location_name
-        text city
-        text state
-        text country
-        text other_name
-        timestamptz created_at
-        timestamptz updated_at
+        UUID account_id PK
+        UUID user_id FK
+        TEXT account_name
+        TEXT account_type
+        NUMERIC balance
+        BOOLEAN is_active
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
     }
 
     CATEGORIES {
-        bigint category_id PK
-        bigint parent_category_id FK
-        text category_name UK_CI_BY_PARENT
-        int category_level
-        timestamptz created_at
-        timestamptz updated_at
+        UUID category_id PK
+        UUID parent_category_id FK
+        UUID user_id FK
+        TEXT category_name
+        INT category_level
+        TEXT flow_type
+        TEXT balance_effect
+        TEXT description
+        BOOLEAN is_active
+        INT sort_order
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
     }
 
-    PRODUCTS_SERVICES {
-        bigint product_service_id PK
-        text default_name UK_CI
-        bigint default_category_id FK
-        text unit_of_measure
-        timestamptz created_at
-        timestamptz updated_at
+    MERCHANT_TYPES {
+        UUID merchant_type_id PK
+        TEXT type_name
+        TEXT description
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    MERCHANTS {
+        UUID merchant_id PK
+        UUID primary_merchant_type_id FK
+        UUID created_by_user_id FK
+        TEXT merchant_name
+        TEXT display_name
+        TEXT other_name
+        TEXT formatted_address
+        TEXT location_name
+        TEXT city
+        TEXT state
+        TEXT country
+        NUMERIC latitude
+        NUMERIC longitude
+        GEOGRAPHY location
+        TEXT source
+        TEXT google_place_id
+        TEXT_ARRAY google_additional_types
+        TEXT google_maps_uri
+        BOOLEAN is_user_created
+        TIMESTAMP last_verified_at
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    EXPENSE_DRAFTS {
+        UUID draft_id PK
+        UUID user_id FK
+        BIGINT telegram_chat_id
+        BIGINT telegram_user_id
+        TEXT state
+        UUID category_id FK
+        UUID subcategory_id FK
+        UUID final_category_id FK
+        UUID account_id FK
+        UUID from_account_id FK
+        UUID to_account_id FK
+        UUID merchant_id FK
+        NUMERIC location_latitude
+        NUMERIC location_longitude
+        NUMERIC amount
+        TEXT description
+        TIMESTAMP transaction_datetime
+        JSONB metadata
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+        TIMESTAMP expires_at
     }
 
     EXPENSE_TRANSACTIONS {
-        bigint transaction_id PK
-        bigint user_id FK
-        bigint account_id FK
-        bigint merchant_id FK
-        timestamptz transaction_datetime
-        date transaction_date
-        numeric total_amount
-        text notes
-        timestamptz created_at
-        timestamptz updated_at
+        UUID transaction_id PK
+        UUID user_id FK
+        UUID account_id FK
+        UUID merchant_id FK "NOT NULL"
+        UUID category_id FK
+        UUID created_from_draft_id FK
+        TIMESTAMP transaction_datetime
+        DATE transaction_date
+        NUMERIC total_amount
+        TEXT description
+        TEXT source
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
     }
 
     ACCOUNT_TRANSFERS {
-        bigint transfer_id PK
-        bigint user_id FK
-        bigint from_account_id FK
-        bigint to_account_id FK
-        timestamptz transfer_datetime
-        date transfer_date
-        numeric amount
-        text notes
-        timestamptz created_at
-        timestamptz updated_at
+        UUID transfer_id PK
+        UUID user_id FK
+        UUID from_account_id FK
+        UUID to_account_id FK
+        UUID created_from_draft_id FK
+        TIMESTAMP transfer_datetime
+        DATE transfer_date
+        NUMERIC amount
+        TEXT description
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
     }
 
-    EXPENSE_LINE_ITEMS {
-        bigint line_item_id PK
-        bigint transaction_id FK
-        bigint product_service_id FK
-        bigint category_id FK
-        text item_name
-        numeric quantity
-        numeric unit_price
-        numeric total_price
-        timestamptz created_at
-        timestamptz updated_at
+    EXTERNAL_TRANSFERS {
+        UUID external_transfer_id PK
+        UUID user_id FK
+        UUID from_account_id FK
+        UUID category_id FK
+        UUID created_from_draft_id FK
+        TEXT recipient_name
+        TEXT recipient_group
+        TIMESTAMP transfer_datetime
+        DATE transfer_date
+        NUMERIC amount
+        TEXT description
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
     }
-
-    USERS ||--o{ ACCOUNTS : owns
-    USERS ||--o{ EXPENSE_TRANSACTIONS : records
-    USERS ||--o{ ACCOUNT_TRANSFERS : records
-
-    ACCOUNTS ||--o{ EXPENSE_TRANSACTIONS : used_for
-    ACCOUNTS ||--o{ ACCOUNT_TRANSFERS : source
-    ACCOUNTS ||--o{ ACCOUNT_TRANSFERS : destination
-
-    MERCHANT_TYPES ||--o{ MERCHANTS : classifies
-    MERCHANTS ||--o{ EXPENSE_TRANSACTIONS : spent_at
-
-    EXPENSE_TRANSACTIONS ||--o{ EXPENSE_LINE_ITEMS : contains
-
-    CATEGORIES ||--o{ CATEGORIES : parent_of
-    CATEGORIES ||--o{ PRODUCTS_SERVICES : default_for
-    CATEGORIES ||--o{ EXPENSE_LINE_ITEMS : classifies
-
-    PRODUCTS_SERVICES ||--o{ EXPENSE_LINE_ITEMS : referenced_by
