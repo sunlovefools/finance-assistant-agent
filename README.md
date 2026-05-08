@@ -1,29 +1,43 @@
 # Financial Assistant Agent
 
-This repository currently focuses on database design for personal expense tracking with transfer support.
+This repository currently focuses on a Telegram-backed financial assistant and database design for personal expense tracking with transfer support.
 
-## Expense Workflow API (LangGraph)
+## Telegram Webhook API
 
-This project now includes a unified FastAPI workflow endpoint:
+The FastAPI backend receives Telegram bot webhooks at:
 
-- `POST /api/v1/expenses/workflow`
+- `POST /api/v1/telegram/webhook`
 
-It runs a LangGraph conversation flow for expense insertion:
-
-- extraction -> account resolution -> merchant exploration/resolution
-- clarification / confirmation loops
-- optional merchant creation (after user approval)
-- atomic expense insert + account balance update
-
-Visibility:
-
-- Structured JSONL workflow logs are written to:
-  - `logs/expense_workflow_events.jsonl` (or `WORKFLOW_LOG_PATH`)
+For the current milestone, the webhook validates the incoming Telegram update with Pydantic and logs the text sent to the bot. The log prints to the server console.
 
 Run locally:
 
 ```bash
 python main.py
+```
+
+Local health check:
+
+```bash
+curl http://localhost:8000/health
+```
+
+After starting ngrok, set `TELEGRAM_WEBHOOK_BASE_URL` in `.env` to your public ngrok HTTPS URL, then run:
+
+```bash
+python scripts/setup_telegram_webhook.py
+```
+
+Required config:
+
+- `TELEGRAM_BOT_TOKEN`: your bot token, already used when registering the webhook.
+- `TELEGRAM_WEBHOOK_BASE_URL`: your public ngrok HTTPS URL, for example `https://your-domain.ngrok-free.app`.
+- `TELEGRAM_WEBHOOK_SECRET`: a random secret you provide to Telegram through `secret_token`; Telegram will send it back in `X-Telegram-Bot-Api-Secret-Token`.
+
+Run tests:
+
+```bash
+pytest -q
 ```
 
 ## Core Capabilities
